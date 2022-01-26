@@ -5,11 +5,22 @@ import matplotlib.pyplot as plt
 import argparse
 import html
 import hashlib
+from datetime import datetime
+from operator import itemgetter
 
 commit_list = open("commit_list").readlines()
+commit_list = [x.strip() for x in commit_list]
+
+stream = os.popen("git log --no-decorate --pretty=format:'%h %as'")
+streamLines = stream.readlines()
+L = {x.strip().split()[0]:datetime.strptime(x.strip().split()[1],'%Y-%m-%d') for x in streamLines}
+
+commit_with_date = [[x,L[x]] for x in commit_list]
+commit_with_date = sorted(commit_with_date, key=itemgetter(1))
+commit_list = [x[0] for x in commit_with_date]
+
 benchmarks = {}
 for commit in commit_list:
-    commit = commit.strip()
     fname = commit + '/out.json'
 
     with open(fname, 'r') as file:
@@ -18,19 +29,18 @@ for commit in commit_list:
             if not bb['name'] in benchmarks.keys():
                 benchmarks[bb['name']] = []
             benchmarks[bb['name']].append({'id': commit, 'cpu_time': bb['cpu_time']})
-            
-
-#print(benchmarks['BM_Square_SGEMM/32'])
 
 for bench in benchmarks.keys():
     if 'median' in bench:
         R = [ v['cpu_time'] for v in benchmarks[bench] ]
         IDs = [ v['id'] for v in benchmarks[bench] ]
-        fname = "out/" + bench.replace('/','_') + ".png"
+        fname = "out/" + bench.replace('/','_').replace('_median','') + ".png"
         plt.plot(IDs, R)
-        plt.title(bench)
-        plt.xlabel("Date")
-        plt.ylabel("Time (ns)")
+        plt.title(bench.replace('/','_').replace('_median',''))
+        plt.xlabel("Commit (ordered in ascending date)")
+        plt.xticks(rotation=45, ha='right')
+        plt.ylabel("Time")
+        plt.tight_layout()
         plt.savefig(fname)
         plt.clf()
 
