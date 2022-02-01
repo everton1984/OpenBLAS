@@ -49,13 +49,13 @@ COMMIT_LIST_FILE=$1
 while IFS= read -r COMMIT
 do
     echo $COMMIT
-    if [[ ! -d $CUR_DIR/$COMMIT ]]; then
+    #if [[ ! -d $CUR_DIR/$COMMIT ]]; then
         git checkout $COMMIT
         mkdir -p $CUR_DIR/$COMMIT
         cd ..
         make clean && make -j10 && make install PREFIX=$CUR_DIR/$COMMIT
         cd $CUR_DIR
-    fi
+    #fi
     # rm -Rf build && mkdir build && cd build
     # cmake ..
     # cd $CUR_DIR

@@ -65,4 +65,28 @@ BENCHMARK(BM_Rect_SGEMM)->Args({40,4,4})->Args({400,4,4})->Args({1024,10,10});
 BENCHMARK(BM_Rect_SGEMM)->Args({4,40,4})->Args({4,400,4})->Args({10,1024,10});
 BENCHMARK(BM_Rect_SGEMM)->Args({4,4,40})->Args({4,4,400})->Args({10,10,1024});
 
+static void BM_Square_DGEMM(benchmark::State& state)
+{
+    int M = state.range(0);
+    int K = state.range(0);
+    int N = state.range(0);
+    
+    GEMM_Test<double>(state, M, K, N);
+}
+BENCHMARK(BM_Square_DGEMM)->Arg(32)->Arg(64)->Arg(128)->Arg(256)->Arg(512)->Arg(1024)->Arg(2048);
+BENCHMARK(BM_Square_DGEMM)->Arg(57)->Arg(103)->Arg(201)->Arg(337)->Arg(783)->Arg(1539);
+
+static void BM_Rect_DGEMM(benchmark::State& state)
+{
+    int M = state.range(0);
+    int K = state.range(1);
+    int N = state.range(2);
+    
+    GEMM_Test<double>(state, M, K, N);
+}
+
+BENCHMARK(BM_Rect_DGEMM)->Args({40,4,4})->Args({400,4,4})->Args({1024,10,10});
+BENCHMARK(BM_Rect_DGEMM)->Args({4,40,4})->Args({4,400,4})->Args({10,1024,10});
+BENCHMARK(BM_Rect_DGEMM)->Args({4,4,40})->Args({4,4,400})->Args({10,10,1024});
+
 BENCHMARK_MAIN();

@@ -50,7 +50,7 @@ while IFS= read -r COMMIT
 do
     echo $COMMIT
     if [[ -d $CUR_DIR/$COMMIT ]]; then
-        if [[ ! -f $CUR_DIR/$COMMIT/bench ]]; then
+        #if [[ ! -f $CUR_DIR/$COMMIT/bench ]]; then
             g++ bench.cpp -Ofast \
                 -L $CUR_DIR/benchmark/build/src/ \
                 -L $CUR_DIR/$COMMIT/lib \
@@ -59,10 +59,10 @@ do
                 -I $HOME/sources/eigen \
                 -lbenchmark -lpthread -lopenblas \
                 -o $CUR_DIR/$COMMIT/bench
-        fi
+        #fi
         cd $CUR_DIR/$COMMIT
         #LD_LIBRARY_PATH=./lib/ bench --benchmark_repetitions=1 --benchmark_report_aggregates_only=true --benchmark_format=csv --benchmark_out=out.csv
-        LD_LIBRARY_PATH=./lib/ bench --benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_format=json --benchmark_out=out.json
+        LD_LIBRARY_PATH=./lib/ bench --benchmark_repetitions=2 --benchmark_report_aggregates_only=true --benchmark_format=json --benchmark_out=out.json
         cd $CUR_DIR
     fi
     # rm -Rf build && mkdir build && cd build
