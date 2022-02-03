@@ -8,9 +8,45 @@ import hashlib
 from datetime import datetime
 from operator import itemgetter
 
+def gen_graphs(benchmarks):
+    for bench in benchmarks.keys():
+        if 'median' in bench:
+            R = [ v['cpu_time'] for v in benchmarks[bench] ]
+            IDs = [ v['id'] for v in benchmarks[bench] ]
+            fname = "out/" + bench.replace('/','_').replace('_median','') + ".png"
+            plt.plot(IDs, R)
+            plt.title(bench.replace('/','_').replace('_median',''))
+            plt.xlabel("Commit (ordered in ascending date)")
+            plt.xticks(rotation=45, ha='right')
+            plt.ylabel("Time")
+            plt.tight_layout()
+            plt.savefig(fname)
+            plt.clf()
+
+def clean_data(benchmarks):
+    res = {}
+    for bench in benchmarks.keys():
+        if 'median' in bench:
+            clean_key = bench.replace('_median','')
+            res[clean_key] = []
+            res[clean_key] = [ v['cpu_time'] for v in benchmarks[bench]]
+    return res
+
+def gen_diff(benchmarks):
+    res = clean_data(benchmarks)
+    for resKey in res.keys():
+        R = res[resKey]
+        R0 = [0] + R[:-1]
+        Rdiff = [y/x for x, y in zip(R,R0)][1:]
+        total = R[0]/R[-1]
+        res[resKey] = {'timeseries':Rdiff, 'total': total}
+    return res
+
+# Load commit list
 commit_list = open("commit_list").readlines()
 commit_list = [x.strip() for x in commit_list]
 
+# Get commit dates
 stream = os.popen("git log --no-decorate --pretty=format:'%h %as'")
 streamLines = stream.readlines()
 L = {x.strip().split()[0]:datetime.strptime(x.strip().split()[1],'%Y-%m-%d') for x in streamLines}
@@ -19,6 +55,7 @@ commit_with_date = [[x,L[x]] for x in commit_list]
 commit_with_date = sorted(commit_with_date, key=itemgetter(1))
 commit_list = [x[0] for x in commit_with_date]
 
+# Extract data
 benchmarks = {}
 for commit in commit_list:
     fname = commit + '/out.json'
@@ -30,19 +67,28 @@ for commit in commit_list:
                 benchmarks[bb['name']] = []
             benchmarks[bb['name']].append({'id': commit, 'cpu_time': bb['cpu_time']})
 
-for bench in benchmarks.keys():
-    if 'median' in bench:
-        R = [ v['cpu_time'] for v in benchmarks[bench] ]
-        IDs = [ v['id'] for v in benchmarks[bench] ]
-        fname = "out/" + bench.replace('/','_').replace('_median','') + ".png"
-        plt.plot(IDs, R)
-        plt.title(bench.replace('/','_').replace('_median',''))
-        plt.xlabel("Commit (ordered in ascending date)")
-        plt.xticks(rotation=45, ha='right')
-        plt.ylabel("Time")
-        plt.tight_layout()
-        plt.savefig(fname)
-        plt.clf()
+# bDiffs = gen_diff(benchmarks)
+# for key in bDiffs:
+#     m = min(bDiffs[key]['timeseries'])
+#     M = bDiffs[key]['timeseries'][-1]
+#     if m != M and M < m:
+#         print(key, v, m, M)
+
+res = clean_data(benchmarks)
+for key in res.keys():
+    T = res[key]
+    m = min(T)
+    M = T[-1]
+    v = m / M
+    if m < M and v < 0.98:
+        uncleanKey = key+'_mean'
+        cid = ''
+        for elem in benchmarks[uncleanKey]:
+            time = elem['cpu_time']
+            if elem['cpu_time'] == m:
+                cid = elem['id']
+        print(key.replace('BM_',''), ',', "%.0f" % ((1-v)*100) + "%",cid, time)
+
 
 # benchmarkInfo = {}
 
