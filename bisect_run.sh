@@ -14,7 +14,7 @@ g++ my_bench/bench.cpp -Ofast \
     -o bench_bisect
 mv bench_bisect $TMP_DIR/bench_bisect
 cd $TMP_DIR
-LD_LIBRARY_PATH=./.local/lib bench_bisect --benchmark_repetitions=5 --benchmark_report_aggregates_only=true --benchmark_format=json --benchmark_out=out.json --benchmark_filter=BM_Square_DGEMM/512
+LD_LIBRARY_PATH=./.local/lib bench_bisect --benchmark_repetitions=50 --benchmark_report_aggregates_only=true --benchmark_format=json --benchmark_out=out.json --benchmark_filter=BM_Square_DGEMM/512
 SCRIPT='import sys, json
 J = json.load(sys.stdin)
 for el in J["benchmarks"]:
