@@ -48,15 +48,16 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     {
       // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
       ptrbb = sb + i*k;
+      ptrba = sa + j;
       res0 = 0;
       for(k = 0; k < K; k++)
       {
-        printf("A(%ld,%ld) = %f | B(%ld,%ld) = %f\n", i, k, ptrba[0], k, j, ptrbb[0]);
+        // printf("A(%ld,%ld) = %f | B(%ld,%ld) = %f\n", i, k, ptrba[0], k, j, ptrbb[0]);
         res0 += ptrba[0]*ptrbb[0];
-        ptrba += 1;
+        ptrba += M;
         ptrbb += 1;
       }
-      printf("C(%ld,%ld) = %f\n", i, j, res0);
+      // printf("C(%ld,%ld) = %f\n", i, j, res0);
       C0[i*LDC + j] = alpha*res0;
       // C0 += 1;
     }
