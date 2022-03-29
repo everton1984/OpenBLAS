@@ -134,7 +134,7 @@ endif
 SGEMMONCOPYOBJ =  sgemm_oncopy$(TSUFFIX).$(SUFFIX)
 SGEMMOTCOPYOBJ =  sgemm_otcopy$(TSUFFIX).$(SUFFIX)
 
-DGEMMKERNEL    =  dgemm_kernel_$(DGEMM_UNROLL_M)x$(DGEMM_UNROLL_N).S
+DGEMMKERNEL    =  dgemm_kernel_$(DGEMM_UNROLL_M)x$(DGEMM_UNROLL_N)_neoversen1.c
 DTRMMKERNEL    =  dtrmm_kernel_$(DGEMM_UNROLL_M)x$(DGEMM_UNROLL_N).S
 
 ifneq ($(DGEMM_UNROLL_M), $(DGEMM_UNROLL_N))
