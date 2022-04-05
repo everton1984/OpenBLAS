@@ -86,7 +86,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
@@ -247,7 +247,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
@@ -339,7 +339,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
@@ -432,7 +432,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
@@ -524,8 +524,8 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     // printf("Inside loop %ld %ld %ld\n", i, j, k);
     // C0 = C;
     // C1 = C0 + LDC;
-    C0 = C + 0*LDC;
-    C1 = C + 1*LDC;
+    C0 = C + (0 + j)*LDC;
+    C1 = C + (1 + j)*LDC;
     // C2 = C + 2*LDC;
     // C3 = C + 3*LDC;
     ptrba = sa;
@@ -535,7 +535,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
 
@@ -651,7 +651,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -743,7 +743,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -833,7 +833,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -924,7 +924,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     // printf("Inside loop %ld %ld %ld\n", i, j, k);
     // C0 = C;
     // C1 = C0 + LDC;
-    C0 = C + 0*LDC;
+    C0 = C + (0 + j)*LDC;
     // C1 = C + 1*LDC;
     // C2 = C + 2*LDC;
     // C3 = C + 3*LDC;
@@ -935,7 +935,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -1040,7 +1040,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -1132,7 +1132,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
@@ -1222,7 +1222,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
-      ptrbb = sb;
+      ptrbb = sb + j*K;
       res00 = res01 = res02 = res03 = 0;
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
