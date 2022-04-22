@@ -28,6 +28,20 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "common.h"
 #include <arm_neon.h>
 
+// #define __DEBUG1__
+// #define __DEBUG0__
+
+#ifdef __DEBUG0__
+#define print(...) printf(__VA_ARGS__)
+#else
+#define print(...) 
+#endif
+
+#ifdef __DEBUG1__
+#define print1(...) printf(__VA_ARGS__)
+#else
+#define print1(...) 
+#endif
 
 // A m x k
 // B k x n
@@ -35,7 +49,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
   FLOAT *sa, FLOAT *sb, FLOAT *C, BLASLONG LDC
   )
 {
-  // printf("Entering kernel 8x4 neoverse %ld %ld %ld\n", N, M, K);
+  // print("Entering kernel 8x4 neoverse %ld %ld %ld\n", N, M, K);
   BLASLONG i = 0,j = 0,k = 0;
   FLOAT *C0, *C1, *C2, *C3;
   // FLOAT *C4, *C5, *C6, *C7;
@@ -50,24 +64,26 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
   FLOAT res24, res25, res26, res27;
   FLOAT res34, res35, res36, res37;
 
-#define __DEBUG__
+// #define __DEBUG__
 
-#ifdef __DEBUG__
-  printf("M %ld N %ld K %ld\n", M, N, K);
-  printf("blockA\n");
+
+  print1("M %ld N %ld K %ld A %f\n", M, N, K, alpha);
+
+  print("blockA\n");
   for(BLASLONG ii = 0; ii < M*K; ii++)
-    printf("%f ", sa[ii]);
-  printf("\n");
+    print("%f ", sa[ii]);
+  print("\n");
 
-  printf("blockB\n");
+  print("blockB\n");
   for(BLASLONG ii = 0; ii < K*N; ii++)
-    printf("%f ", sb[ii]);
-  printf("\n");
-#endif
+    print("%f ", sb[ii]);
+  print("\n");
 
+
+  print1("Starting j=4\n");
   for(j = 0; j + 4 <= N; j += 4)
   {
-    // printf("Inside loop %ld %ld %ld\n", i, j, k);
+    // print("Inside loop %ld %ld %ld\n", i, j, k);
     // C0 = C;
     // C1 = C0 + LDC;
     C0 = C + (0 + j)*LDC;
@@ -80,9 +96,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     // C6 = C + 6*LDC;
     // C7 = C + 7*LDC;
     ptrba = sa;
+    print1("Starting i=8\n");
     for(i = 0; i + 8 <= M; i+=8)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -101,13 +118,13 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
-        printf("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
+        print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -156,14 +173,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -171,7 +188,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
       C0[2] += alpha*res02;
@@ -241,9 +258,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C6 += 4;
       // C7 += 4;
     }
+    print1("Starting i=4 (%ld)\n",i);
     for(; i + 4 <= M; i+=4)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -258,12 +276,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -292,14 +310,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -307,7 +325,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
       C0[2] += alpha*res02;
@@ -333,9 +351,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       C2 += 4;
       C3 += 4;
     }
+    print1("Starting i=2 (%ld)\n",i);
     for(; i + 2 <= M; i+=2)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -349,12 +368,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f\n", ptrba[0], ptrba[1]);
-        printf("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f\n", ptrba[0], ptrba[1]);
+        print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -383,14 +402,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -399,25 +418,25 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
 
-      // printf("C %f %f %f %f\n\n", res00, res10, res20, res30);
+      // print("C %f %f %f %f\n\n", res00, res10, res20, res30);
     
       C0[0] += alpha*res00;
-      C0[1] = alpha*res01;
+      C0[1] += alpha*res01;
       // C0[2] = alpha*res02;
       // C0[3] = alpha*res03;
 
       C1[0] += alpha*res10;
-      C1[1] = alpha*res11;
+      C1[1] += alpha*res11;
       // C1[2] = alpha*res12;
       // C1[3] = alpha*res13;
 
       C2[0] += alpha*res20;
-      C2[1] = alpha*res21;
+      C2[1] += alpha*res21;
       // C2[2] = alpha*res22;
       // C2[3] = alpha*res23;
 
       C3[0] += alpha*res30;
-      C3[1] = alpha*res31;
+      C3[1] += alpha*res31;
       // C3[2] = alpha*res32;
       // C3[3] = alpha*res33;
 
@@ -426,9 +445,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       C2 += 2;
       C3 += 2;
     }
+    print1("Starting i=1 (%ld)\n",i);
     for(; i < M; i++)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -442,12 +462,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f\n", ptrba[0]);
-        printf("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f\n", ptrba[0]);
+        print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         // res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -476,14 +496,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -491,7 +511,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n\n", res00, res10, res20, res30);
+      print1("C %f %f %f %f\n\n", res00, res10, res20, res30);
       C0[0] += alpha*res00;
       // C0[1] = alpha*res01;
       // C0[2] = alpha*res02;
@@ -519,9 +539,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     }
     // sb += 1;
   }
+  print1("Starting j=2 (%ld)\n",j);
   for(; j + 2 <= N; j+=2)
   {
-    // printf("Inside loop %ld %ld %ld\n", i, j, k);
+    // print("Inside loop %ld %ld %ld\n", i, j, k);
     // C0 = C;
     // C1 = C0 + LDC;
     C0 = C + (0 + j)*LDC;
@@ -529,9 +550,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     // C2 = C + 2*LDC;
     // C3 = C + 3*LDC;
     ptrba = sa;
+    print1("Starting i=8\n");
     for(i = 0; i + 8 <= M; i+=8)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -548,13 +570,13 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
-        printf("B %f %f\n", ptrbb[0], ptrbb[1]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
+        print("B %f %f\n", ptrbb[0], ptrbb[1]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -592,14 +614,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -608,7 +630,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
 
-      // printf("C %f %f %f %f\n\n", res00, res01, res02, res03);
+      // print("C %f %f %f %f\n\n", res00, res01, res02, res03);
 
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
@@ -645,9 +667,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 4;
       // C3 += 4;
     }
+    print1("Starting i=4 (%ld)\n",i);
     for(; i + 4 <= M; i+=4)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -661,12 +684,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("B %f %f\n", ptrbb[0], ptrbb[1]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("B %f %f\n", ptrbb[0], ptrbb[1]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -694,14 +717,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -710,7 +733,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
 
-      // printf("C %f %f %f %f\n\n", res00, res01, res02, res03);
+      // print("C %f %f %f %f\n\n", res00, res01, res02, res03);
 
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
@@ -737,9 +760,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 4;
       // C3 += 4;
     }
+    print1("Starting i=2 (%ld)\n",i);
     for(; i + 2 <= M; i+=2)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -753,12 +777,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f\n", ptrba[0], ptrba[1]);
-        printf("B %f %f\n", ptrbb[0], ptrbb[1]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f\n", ptrba[0], ptrba[1]);
+        print("B %f %f\n", ptrbb[0], ptrbb[1]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -786,14 +810,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -801,14 +825,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
       // C0[2] = alpha*res02;
       // C0[3] = alpha*res03;
 
       C1[0] += alpha*res10;
-      C1[1] = alpha*res11;
+      C1[1] += alpha*res11;
       // C1[2] = alpha*res12;
       // C1[3] = alpha*res13;
 
@@ -827,9 +851,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 1;
       // C3 += 1;
     }
+    print1("Starting i=1 (%ld)\n",i);
     for(; i < M; i++)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -843,12 +868,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f\n", ptrba[0]);
-        printf("B %f %f\n", ptrbb[0]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f\n", ptrba[0]);
+        print("B %f %f\n", ptrbb[0]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         // res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -876,14 +901,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -891,7 +916,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       // C0[1] = alpha*res01;
       // C0[2] = alpha*res02;
@@ -919,9 +944,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     }
     // sb += 1;
   }
+  print1("Starting j=1 (%ld) %ld\n",j, N);
   for(; j < N; j++)
   {
-    // printf("Inside loop %ld %ld %ld\n", i, j, k);
+    // print("Inside loop %ld %ld %ld\n", i, j, k);
     // C0 = C;
     // C1 = C0 + LDC;
     C0 = C + (0 + j)*LDC;
@@ -929,9 +955,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     // C2 = C + 2*LDC;
     // C3 = C + 3*LDC;
     ptrba = sa;
+    print1("Starting i=8\n");
     for(i = 0; i + 8 <= M; i+=8)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -947,13 +974,13 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
-        printf("B %f\n", ptrbb[0]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
+        print("B %f\n", ptrbb[0]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -986,14 +1013,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -1002,7 +1029,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
 
-      // printf("C %f %f %f %f\n\n", res00, res01, res02, res03);
+      // print("C %f %f %f %f\n\n", res00, res01, res02, res03);
 
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
@@ -1034,9 +1061,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 4;
       // C3 += 4;
     }
+    print1("Starting i=4 (%ld)\n",i);
     for(; i + 4 <= M; i+=4)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -1050,12 +1078,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        printf("B %f\n", ptrbb[0]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+        print("B %f\n", ptrbb[0]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         res02 += ptrba[2]*ptrbb[0];
@@ -1083,14 +1111,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -1099,7 +1127,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
 
-      // printf("C %f %f %f %f\n\n", res00, res01, res02, res03);
+      // print("C %f %f %f %f\n\n", res00, res01, res02, res03);
 
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
@@ -1126,9 +1154,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 4;
       // C3 += 4;
     }
+    print1("Starting i=2 (%ld)\n",i);
     for(; i + 2 <= M; i+=2)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -1142,12 +1171,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f %f\n", ptrba[0], ptrba[1]);
-        printf("B %f\n", ptrbb[0]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f %f\n", ptrba[0], ptrba[1]);
+        print("B %f\n", ptrbb[0]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -1175,14 +1204,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -1190,7 +1219,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       C0[1] += alpha*res01;
       // C0[2] = alpha*res02;
@@ -1216,9 +1245,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // C2 += 1;
       // C3 += 1;
     }
+    print1("Starting i=1 (%ld)\n",i);
     for(; i < M; i++)
     {
-      // printf("Inside loop2 %ld %ld %ld\n", i, j, k);
+      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
       // ptrbb = sb + i*k;
       // ptrba = sa + j;
       //ptrbb = sb;
@@ -1232,12 +1262,12 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       {
         // float64x2_t a = vld1q_f64(ptrba);
         // float64x2_t b = vld1q_f64(ptrbb);
-#ifdef __DEBUG__
-        printf("A %f\n", ptrba[0]);
-        printf("B %f\n", ptrbb[0]);
-#endif
-        // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // printf("A %f\n", ptrba[0]);
+
+        print("A %f\n", ptrba[0]);
+        print("B %f\n", ptrbb[0]);
+
+        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+        // print("A %f\n", ptrba[0]);
         res00 += ptrba[0]*ptrbb[0];
         // res01 += ptrba[1]*ptrbb[0];
         // res02 += ptrba[2]*ptrbb[0];
@@ -1265,14 +1295,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         // r3 = vmlaq_f64(r3, a, b[1]);
         // r4 = vmlaq_f64(r4, a, b[1]);
       }
-#ifdef __DEBUG__
-      printf("\n");
-#endif
+
+      print("\n");
+
       // for(k = 0; k < K; k++)
       // {
-      //   printf("A %f | ", ptrba[0]);
-      //   // printf("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   printf("B %f\n", ptrbb[0]);
+      //   print("A %f | ", ptrba[0]);
+      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
+      //   print("B %f\n", ptrbb[0]);
       //   res0 += ptrba[0]*ptrbb[0];
       //   res1 += ptrba[1]*ptrbb[0];
       //   res2 += ptrba[2]*ptrbb[0];
@@ -1280,7 +1310,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrba += 4;
       //   ptrbb += 1;
       // }
-      // printf("C %f %f %f %f\n", res0, res1, res2, res3);
+      // print("C %f %f %f %f\n", res0, res1, res2, res3);
       C0[0] += alpha*res00;
       // C0[1] = alpha*res01;
       // C0[2] = alpha*res02;
