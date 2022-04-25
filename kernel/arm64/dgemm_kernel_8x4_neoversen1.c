@@ -43,6 +43,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define print1(...) 
 #endif
 
+inline void kernel_8x4(BLASLONG K, FLOAT alpha,
+  FLOAT *ptrba, FLOAT *ptrbb, FLOAT *C0, FLOAT *C1, FLOAT *C2, FLOAT *C3)
+  {
+
+  }
+
 // A m x k
 // B k x n
 int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
@@ -113,7 +119,14 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res14 = res15 = res16 = res17 = 0;
       res24 = res25 = res26 = res27 = 0;
       res34 = res35 = res36 = res37 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+
+      float64x2_t acc00 = vdupq_n_f64(0), acc01 = vdupq_n_f64(0), acc02 = vdupq_n_f64(0), acc03 = vdupq_n_f64(0);
+      float64x2_t acc10 = vdupq_n_f64(0), acc11 = vdupq_n_f64(0), acc12 = vdupq_n_f64(0), acc13 = vdupq_n_f64(0);
+      float64x2_t acc20 = vdupq_n_f64(0), acc21 = vdupq_n_f64(0), acc22 = vdupq_n_f64(0), acc23 = vdupq_n_f64(0);
+      float64x2_t acc30 = vdupq_n_f64(0), acc31 = vdupq_n_f64(0), acc32 = vdupq_n_f64(0), acc33 = vdupq_n_f64(0);
+
+      float64x2_t ra1 = vdupq_n_f64(0), ra2 = vdupq_n_f64(0), ra3 = vdupq_n_f64(0), ra4 = vdupq_n_f64(0);
+      float64x2_t rb1 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -123,47 +136,81 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
         print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
         print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
 
+        ra1 = vld1q_f64(ptrba + 0*2);
+        ra2 = vld1q_f64(ptrba + 1*2);
+        ra3 = vld1q_f64(ptrba + 2*2);
+        ra4 = vld1q_f64(ptrba + 3*2);
+
+        rb1 = vdupq_n_f64(ptrbb[0]);
+
+        acc00 = vfmaq_f64(acc00, ra1, rb1);
+        acc01 = vfmaq_f64(acc01, ra2, rb1);
+        acc02 = vfmaq_f64(acc02, ra3, rb1);
+        acc03 = vfmaq_f64(acc03, ra4, rb1);
+
+        rb1 = vdupq_n_f64(ptrbb[1]);
+
+        acc10 = vfmaq_f64(acc10, ra1, rb1);
+        acc11 = vfmaq_f64(acc11, ra2, rb1);
+        acc12 = vfmaq_f64(acc12, ra3, rb1);
+        acc13 = vfmaq_f64(acc13, ra4, rb1);
+
+        rb1 = vdupq_n_f64(ptrbb[2]);
+
+        acc20 = vfmaq_f64(acc20, ra1, rb1);
+        acc21 = vfmaq_f64(acc21, ra2, rb1);
+        acc22 = vfmaq_f64(acc22, ra3, rb1);
+        acc23 = vfmaq_f64(acc23, ra4, rb1);
+
+        rb1 = vdupq_n_f64(ptrbb[3]);
+
+        acc30 = vfmaq_f64(acc30, ra1, rb1);
+        acc31 = vfmaq_f64(acc31, ra2, rb1);
+        acc32 = vfmaq_f64(acc32, ra3, rb1);
+        acc33 = vfmaq_f64(acc33, ra4, rb1);
+        
         // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
         // print("A %f\n", ptrba[0]);
-        res00 += ptrba[0]*ptrbb[0];
-        res01 += ptrba[1]*ptrbb[0];
-        res02 += ptrba[2]*ptrbb[0];
-        res03 += ptrba[3]*ptrbb[0];
 
-        res04 += ptrba[4]*ptrbb[0];
-        res05 += ptrba[5]*ptrbb[0];
-        res06 += ptrba[6]*ptrbb[0];
-        res07 += ptrba[7]*ptrbb[0];
+        // res00 += ptrba[0]*ptrbb[0];
+        // res01 += ptrba[1]*ptrbb[0];
+        // res02 += ptrba[2]*ptrbb[0];
+        // res03 += ptrba[3]*ptrbb[0];
 
-        res10 += ptrba[0]*ptrbb[1];
-        res11 += ptrba[1]*ptrbb[1];
-        res12 += ptrba[2]*ptrbb[1];
-        res13 += ptrba[3]*ptrbb[1];
+        // res04 += ptrba[4]*ptrbb[0];
+        // res05 += ptrba[5]*ptrbb[0];
+        // res06 += ptrba[6]*ptrbb[0];
+        // res07 += ptrba[7]*ptrbb[0];
 
-        res14 += ptrba[4]*ptrbb[1];
-        res15 += ptrba[5]*ptrbb[1];
-        res16 += ptrba[6]*ptrbb[1];
-        res17 += ptrba[7]*ptrbb[1];
+        // res10 += ptrba[0]*ptrbb[1];
+        // res11 += ptrba[1]*ptrbb[1];
+        // res12 += ptrba[2]*ptrbb[1];
+        // res13 += ptrba[3]*ptrbb[1];
 
-        res20 += ptrba[0]*ptrbb[2];
-        res21 += ptrba[1]*ptrbb[2];
-        res22 += ptrba[2]*ptrbb[2];
-        res23 += ptrba[3]*ptrbb[2];
+        // res14 += ptrba[4]*ptrbb[1];
+        // res15 += ptrba[5]*ptrbb[1];
+        // res16 += ptrba[6]*ptrbb[1];
+        // res17 += ptrba[7]*ptrbb[1];
 
-        res24 += ptrba[4]*ptrbb[2];
-        res25 += ptrba[5]*ptrbb[2];
-        res26 += ptrba[6]*ptrbb[2];
-        res27 += ptrba[7]*ptrbb[2];
+        // res20 += ptrba[0]*ptrbb[2];
+        // res21 += ptrba[1]*ptrbb[2];
+        // res22 += ptrba[2]*ptrbb[2];
+        // res23 += ptrba[3]*ptrbb[2];
 
-        res30 += ptrba[0]*ptrbb[3];
-        res31 += ptrba[1]*ptrbb[3];
-        res32 += ptrba[2]*ptrbb[3];
-        res33 += ptrba[3]*ptrbb[3];
+        // res24 += ptrba[4]*ptrbb[2];
+        // res25 += ptrba[5]*ptrbb[2];
+        // res26 += ptrba[6]*ptrbb[2];
+        // res27 += ptrba[7]*ptrbb[2];
 
-        res34 += ptrba[4]*ptrbb[3];
-        res35 += ptrba[5]*ptrbb[3];
-        res36 += ptrba[6]*ptrbb[3];
-        res37 += ptrba[7]*ptrbb[3];
+        // res30 += ptrba[0]*ptrbb[3];
+        // res31 += ptrba[1]*ptrbb[3];
+        // res32 += ptrba[2]*ptrbb[3];
+        // res33 += ptrba[3]*ptrbb[3];
+
+        // res34 += ptrba[4]*ptrbb[3];
+        // res35 += ptrba[5]*ptrbb[3];
+        // res36 += ptrba[6]*ptrbb[3];
+        // res37 += ptrba[7]*ptrbb[3];
 
         ptrba += 8;
         ptrbb += 4;
@@ -189,45 +236,85 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       //   ptrbb += 1;
       // }
       // print("C %f %f %f %f\n", res0, res1, res2, res3);
-      C0[0] += alpha*res00;
-      C0[1] += alpha*res01;
-      C0[2] += alpha*res02;
-      C0[3] += alpha*res03;
+      C0[0] += alpha*vgetq_lane_f64(acc00, 0);
+      C0[1] += alpha*vgetq_lane_f64(acc00, 1);
+      C0[2] += alpha*vgetq_lane_f64(acc01, 0);
+      C0[3] += alpha*vgetq_lane_f64(acc01, 1);
 
-      C0[4] += alpha*res04;
-      C0[5] += alpha*res05;
-      C0[6] += alpha*res06;
-      C0[7] += alpha*res07;
+      C0[4] += alpha*vgetq_lane_f64(acc02, 0);
+      C0[5] += alpha*vgetq_lane_f64(acc02, 1);
+      C0[6] += alpha*vgetq_lane_f64(acc03, 0);
+      C0[7] += alpha*vgetq_lane_f64(acc03, 1);
 
-      C1[0] += alpha*res10;
-      C1[1] += alpha*res11;
-      C1[2] += alpha*res12;
-      C1[3] += alpha*res13;
+      C1[0] += alpha*vgetq_lane_f64(acc10, 0);
+      C1[1] += alpha*vgetq_lane_f64(acc10, 1);
+      C1[2] += alpha*vgetq_lane_f64(acc11, 0);
+      C1[3] += alpha*vgetq_lane_f64(acc11, 1);
 
-      C1[4] += alpha*res14;
-      C1[5] += alpha*res15;
-      C1[6] += alpha*res16;
-      C1[7] += alpha*res17;
+      C1[4] += alpha*vgetq_lane_f64(acc12, 0);
+      C1[5] += alpha*vgetq_lane_f64(acc12, 1);
+      C1[6] += alpha*vgetq_lane_f64(acc13, 0);
+      C1[7] += alpha*vgetq_lane_f64(acc13, 1);
 
-      C2[0] += alpha*res20;
-      C2[1] += alpha*res21;
-      C2[2] += alpha*res22;
-      C2[3] += alpha*res23;
+      C2[0] += alpha*vgetq_lane_f64(acc20, 0);
+      C2[1] += alpha*vgetq_lane_f64(acc20, 1);
+      C2[2] += alpha*vgetq_lane_f64(acc21, 0);
+      C2[3] += alpha*vgetq_lane_f64(acc21, 1);
 
-      C2[4] += alpha*res24;
-      C2[5] += alpha*res25;
-      C2[6] += alpha*res26;
-      C2[7] += alpha*res27;
+      C2[4] += alpha*vgetq_lane_f64(acc22, 0);
+      C2[5] += alpha*vgetq_lane_f64(acc22, 1);
+      C2[6] += alpha*vgetq_lane_f64(acc23, 0);
+      C2[7] += alpha*vgetq_lane_f64(acc23, 1);
 
-      C3[0] += alpha*res30;
-      C3[1] += alpha*res31;
-      C3[2] += alpha*res32;
-      C3[3] += alpha*res33;
+      C3[0] += alpha*vgetq_lane_f64(acc30, 0);
+      C3[1] += alpha*vgetq_lane_f64(acc30, 1);
+      C3[2] += alpha*vgetq_lane_f64(acc31, 0);
+      C3[3] += alpha*vgetq_lane_f64(acc31, 1);
       
-      C3[4] += alpha*res34;
-      C3[5] += alpha*res35;
-      C3[6] += alpha*res36;
-      C3[7] += alpha*res37;
+      C3[4] += alpha*vgetq_lane_f64(acc32, 0);
+      C3[5] += alpha*vgetq_lane_f64(acc32, 1);
+      C3[6] += alpha*vgetq_lane_f64(acc33, 0);
+      C3[7] += alpha*vgetq_lane_f64(acc33, 1);
+
+      // C0[0] += alpha*res00;
+      // C0[1] += alpha*res01;
+      // C0[2] += alpha*res02;
+      // C0[3] += alpha*res03;
+
+      // C0[4] += alpha*res04;
+      // C0[5] += alpha*res05;
+      // C0[6] += alpha*res06;
+      // C0[7] += alpha*res07;
+
+      // C1[0] += alpha*res10;
+      // C1[1] += alpha*res11;
+      // C1[2] += alpha*res12;
+      // C1[3] += alpha*res13;
+
+      // C1[4] += alpha*res14;
+      // C1[5] += alpha*res15;
+      // C1[6] += alpha*res16;
+      // C1[7] += alpha*res17;
+
+      // C2[0] += alpha*res20;
+      // C2[1] += alpha*res21;
+      // C2[2] += alpha*res22;
+      // C2[3] += alpha*res23;
+
+      // C2[4] += alpha*res24;
+      // C2[5] += alpha*res25;
+      // C2[6] += alpha*res26;
+      // C2[7] += alpha*res27;
+
+      // C3[0] += alpha*res30;
+      // C3[1] += alpha*res31;
+      // C3[2] += alpha*res32;
+      // C3[3] += alpha*res33;
+      
+      // C3[4] += alpha*res34;
+      // C3[5] += alpha*res35;
+      // C3[6] += alpha*res36;
+      // C3[7] += alpha*res37;
       // C4[0] += alpha*res40;
       // C4[1] += alpha*res41;
       // C4[2] += alpha*res42;
@@ -271,7 +358,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res20 = res21 = res22 = res23 = 0;
       res30 = res31 = res32 = res33 = 0;
 
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -363,7 +450,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
       res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -457,7 +544,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res10 = res11 = res12 = res13 = 0;
       res20 = res21 = res22 = res23 = 0;
       res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -565,7 +652,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res14 = res15 = res16 = res17 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -679,7 +766,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -772,7 +859,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -863,7 +950,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -969,7 +1056,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // res30 = res31 = res32 = res33 = 0;
 
       res04 = res05 = res06 = res07 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -1073,7 +1160,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -1166,7 +1253,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
@@ -1257,7 +1344,7 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
       // res10 = res11 = res12 = res13 = 0;
       // res20 = res21 = res22 = res23 = 0;
       // res30 = res31 = res32 = res33 = 0;
-      // float64x2_t r1 = vdupq_f64(0), r2= vdupq_f64(0), r3= vdupq_f64(0), r4 = vdupq_f64(0);
+      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
       for(k = 0; k < K; k++)
       {
         // float64x2_t a = vld1q_f64(ptrba);
