@@ -185,6 +185,33 @@ inline void kernel_8x2(BLASLONG K, FLOAT alpha,
     STR_C4(1);
   }
 
+inline void kernel_8x1(BLASLONG K, FLOAT alpha,
+  FLOAT *ptrba, FLOAT *ptrbb, FLOAT *C0)
+  {
+    DECLR_ACC4(0);
+
+    DECLR_A4();
+    DECLR_B1(1);
+    for(BLASLONG k = 0; k < K; k++)
+    {
+      print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+      print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
+      print("B %f\n", ptrbb[0]);
+
+      LOADA4();
+
+      LOADB1(1,0);
+      KERNEL4x1(0);
+
+      ptrba += 8;
+      ptrbb += 1;
+    }
+
+    print("\n");
+
+    STR_C4(0);
+  }
+
 inline void kernel_4x4(BLASLONG K, FLOAT alpha,
   FLOAT *ptrba, FLOAT *ptrbb, FLOAT *C0, FLOAT *C1, FLOAT *C2, FLOAT *C3)
   {
@@ -526,119 +553,18 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
   print1("Starting j=1 (%ld) %ld\n",j, N);
   for(; j < N; j++)
   {
-    // print("Inside loop %ld %ld %ld\n", i, j, k);
-    // C0 = C;
-    // C1 = C0 + LDC;
     C0 = C + (0 + j)*LDC;
-    // C1 = C + 1*LDC;
-    // C2 = C + 2*LDC;
-    // C3 = C + 3*LDC;
+
     ptrba = sa;
     print1("Starting i=8\n");
     for(i = 0; i + 8 <= M; i+=8)
     {
-      // print("Inside loop2 %ld %ld %ld\n", i, j, k);
-      // ptrbb = sb + i*k;
-      // ptrba = sa + j;
-      //ptrbb = sb;
       ptrbb = sb + j*K;
-      res00 = res01 = res02 = res03 = 0;
-      // res10 = res11 = res12 = res13 = 0;
-      // res20 = res21 = res22 = res23 = 0;
-      // res30 = res31 = res32 = res33 = 0;
+      kernel_8x1(K, alpha, ptrba, ptrbb, C0);
 
-      res04 = res05 = res06 = res07 = 0;
-      // float64x2_t r1 = vdupq_n_f64(0), r2= vdupq_n_f64(0), r3= vdupq_n_f64(0), r4 = vdupq_n_f64(0);
-      for(k = 0; k < K; k++)
-      {
-        // float64x2_t a = vld1q_f64(ptrba);
-        // float64x2_t b = vld1q_f64(ptrbb);
-
-        print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
-        print("A %f %f %f %f\n", ptrba[4], ptrba[5], ptrba[6], ptrba[7]);
-        print("B %f\n", ptrbb[0]);
-
-        // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-        // print("A %f\n", ptrba[0]);
-        res00 += ptrba[0]*ptrbb[0];
-        res01 += ptrba[1]*ptrbb[0];
-        res02 += ptrba[2]*ptrbb[0];
-        res03 += ptrba[3]*ptrbb[0];
-
-        res04 += ptrba[4]*ptrbb[0];
-        res05 += ptrba[5]*ptrbb[0];
-        res06 += ptrba[6]*ptrbb[0];
-        res07 += ptrba[7]*ptrbb[0];
-
-        // res10 += ptrba[0]*ptrbb[1];
-        // res11 += ptrba[1]*ptrbb[1];
-        // res12 += ptrba[2]*ptrbb[1];
-        // res13 += ptrba[3]*ptrbb[1];
-
-        // res20 += ptrba[0]*ptrbb[2];
-        // res21 += ptrba[1]*ptrbb[2];
-        // res22 += ptrba[2]*ptrbb[2];
-        // res23 += ptrba[3]*ptrbb[2];
-
-        // res30 += ptrba[0]*ptrbb[3];
-        // res31 += ptrba[1]*ptrbb[3];
-        // res32 += ptrba[2]*ptrbb[3];
-        // res33 += ptrba[3]*ptrbb[3];
-        ptrba += 8;
-        ptrbb += 1;
-        // r1 = vmlaq_f64(r1, a, b[0]);
-        // r2 = vmlaq_f64(r2, a, b[0]);
-        // a = vldq1_f64(ptrba + 2);
-        // r3 = vmlaq_f64(r3, a, b[1]);
-        // r4 = vmlaq_f64(r4, a, b[1]);
-      }
-
-      print("\n");
-
-      // for(k = 0; k < K; k++)
-      // {
-      //   print("A %f | ", ptrba[0]);
-      //   // print("B %f %f %f %f \n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
-      //   print("B %f\n", ptrbb[0]);
-      //   res0 += ptrba[0]*ptrbb[0];
-      //   res1 += ptrba[1]*ptrbb[0];
-      //   res2 += ptrba[2]*ptrbb[0];
-      //   res3 += ptrba[3]*ptrbb[0];
-      //   ptrba += 4;
-      //   ptrbb += 1;
-      // }
-
-      // print("C %f %f %f %f\n\n", res00, res01, res02, res03);
-
-      C0[0] += alpha*res00;
-      C0[1] += alpha*res01;
-      C0[2] += alpha*res02;
-      C0[3] += alpha*res03;
-
-      C0[4] += alpha*res04;
-      C0[5] += alpha*res05;
-      C0[6] += alpha*res06;
-      C0[7] += alpha*res07;
-
-      // C1[0] += alpha*res10;
-      // C1[1] += alpha*res11;
-      // C1[2] += alpha*res12;
-      // C1[3] += alpha*res13;
-
-      // C2[0] += alpha*res20;
-      // C2[1] += alpha*res21;
-      // C2[2] += alpha*res22;
-      // C2[3] += alpha*res23;
-
-      // C3[0] += alpha*res30;
-      // C3[1] += alpha*res31;
-      // C3[2] += alpha*res32;
-      // C3[3] += alpha*res33;
-      
+      ptrba += 8*K;
+      ptrbb += 1*K;
       C0 += 8;
-      // C1 += 4;
-      // C2 += 4;
-      // C3 += 4;
     }
     print1("Starting i=4 (%ld)\n",i);
     for(; i + 4 <= M; i+=4)
