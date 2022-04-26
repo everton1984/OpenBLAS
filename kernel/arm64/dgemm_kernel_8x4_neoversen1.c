@@ -204,7 +204,7 @@ inline void kernel_2x4(BLASLONG K, FLOAT alpha,
     DECLR_B1(1);
     for(BLASLONG k = 0; k < K; k++)
     {
-      print("A %f %f %f %f\n", ptrba[0], ptrba[1], ptrba[2], ptrba[3]);
+      print("A %f %f\n", ptrba[0], ptrba[1]);
       print("B %f %f %f %f\n", ptrbb[0], ptrbb[1], ptrbb[2], ptrbb[3]);
 
       LOADA1(1);
@@ -322,10 +322,10 @@ int CNAME(BLASLONG M, BLASLONG N, BLASLONG K, FLOAT alpha,
     {
 
       ptrbb = sb + j*K;
-      res00 = res01 = res02 = res03 = 0;
-      res10 = res11 = res12 = res13 = 0;
-      res20 = res21 = res22 = res23 = 0;
-      res30 = res31 = res32 = res33 = 0;
+      res00 = 0;
+      res10 = 0;
+      res20 = 0;
+      res30 = 0;
 
       for(k = 0; k < K; k++)
       {
