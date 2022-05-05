@@ -44,8 +44,15 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DECLR_A1(N) \
   float64x2_t ra##N;
 
+#define DECLR_B1_(N) \
+  float64x2_t rb##N; float64x2_t pAlpha = vdupq_n_f64(alpha);
+
 #define DECLR_B1(N) \
   float64x2_t rb##N;
+
+#define DECLR_B2(N) \
+  DECLR_B1(1); \
+  DECLR_B1(2);
 
 #define DECLR_A2() \
   DECLR_A1(1) \
@@ -58,7 +65,10 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   DECLR_A1(4)
 
 #define LOADA1(N) \
-  ra##N = vld1q_f64(ptrba + (N-1)*2);
+  ra##N = vld1q_f64(ptrba + ((N)-1)*2);
+
+#define LOADA1_(N,K) \
+  ra##N = vld1q_f64(ptrba + ((K)-1)*2);
 
 #define LOADA2() \
   LOADA1(1) \
@@ -70,8 +80,14 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   LOADA1(3) \
   LOADA1(4)
 
+#define LOADA4_(K) \
+  LOADA1_(1,K*4 + 1) \
+  LOADA1_(2,K*4 + 2) \
+  LOADA1_(3,K*4 + 3) \
+  LOADA1_(4,K*4 + 4)
+
 #define LOADB1(N, M) \
-  rb##N = vdupq_n_f64(ptrbb[M]);
+  rb##N = vdupq_n_f64(*(ptrbb + (M)));
 
 #define KERNEL1(N, M, M1) \
   acc##N##_##M = vfmaq_f64(acc##N##_##M , ra##M1 , rb1);
@@ -90,6 +106,12 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   C##N[I+0] += alpha*vgetq_lane_f64(acc##N##_##M, 0); \
   C##N[I+1] += alpha*vgetq_lane_f64(acc##N##_##M, 1);
 
+#define STR_C1_(N, M, I) {\
+  float64x2_t pC = vld1q_f64(C##N + I); \
+  pC = vfmaq_f64(pC, pAlpha, acc##N##_##M); \
+  vst1q_f64(C##N + I, pC); \
+  }
+
 #define STR_C2(N) \
   STR_C1(N, 0, 0); \
   STR_C1(N, 1, 2);
@@ -100,6 +122,30 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   STR_C1(N, 2, 4); \
   STR_C1(N, 3, 6);
 
+#define MKERNEL_(K)   \
+  LOADA4_(K);       \
+  LOADB1(1,K*4 + 0);    \
+  KERNEL4x1(0);   \
+  LOADB1(1,K*4 + 1);    \
+  KERNEL4x1(1);   \
+  LOADB1(1,K*4 + 2);    \
+  KERNEL4x1(2);   \
+  LOADB1(1,K*4 + 3);    \
+  KERNEL4x1(3);
+
+#define MKERNEL()   \
+  LOADA4();       \
+  LOADB1(1,0);    \
+  KERNEL4x1(0);   \
+  LOADB1(1,1);    \
+  KERNEL4x1(1);   \
+  LOADB1(1,2);    \
+  KERNEL4x1(2);   \
+  LOADB1(1,3);    \
+  KERNEL4x1(3);   \
+  ptrba += 8;     \
+  ptrbb += 4;
+
 /*inline*/ void kernel_8x4(BLASLONG K, FLOAT alpha,
   FLOAT *ptrba, FLOAT *ptrbb, FLOAT *C0, FLOAT *C1, FLOAT *C2, FLOAT *C3)
   {
@@ -107,28 +153,45 @@ USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     DECLR_ACC4(1);
     DECLR_ACC4(2);
     DECLR_ACC4(3);
-
+    
     DECLR_A4();
     DECLR_B1(1);
-    for(BLASLONG k = 0; k < K; k++)
+
+    BLASLONG k = 0;
+    for(; k + 8 <= K; k+=8)
     {
-      LOADA4();
-
-      LOADB1(1,0);
-      KERNEL4x1(0);
-      LOADB1(1,1);
-      KERNEL4x1(1);
-      LOADB1(1,2);
-      KERNEL4x1(2);
-      LOADB1(1,3);
-      KERNEL4x1(3);
-
-      ptrba += 8;
-      ptrbb += 4;
+      MKERNEL_(0);
+      MKERNEL_(1);
+      MKERNEL_(2);
+      MKERNEL_(3);
+      MKERNEL_(4);
+      MKERNEL_(5);
+      MKERNEL_(6);
+      MKERNEL_(7);
+      ptrba += 8*8;
+      ptrbb += 4*8;
+    }
+    // __builtin_prefetch(ptrba + 8*0, 0, 1);
+    for(; k + 4 <= K; k+=4)
+    {
+      MKERNEL_(0);
+      MKERNEL_(1);
+      // __builtin_prefetch(ptrba + 8*2, 0, 1);
+      MKERNEL_(2);
+      MKERNEL_(3);
+      // __builtin_prefetch(ptrba + 8*4, 0, 1);
+      ptrba += 8*4;
+      ptrbb += 4*4;
+    }
+    for(; k < K; k++)
+    {
+      MKERNEL();
     }
 
+    // __builtin_prefetch(C0, 1, 0);
     STR_C4(0);
     STR_C4(1);
+    // __builtin_prefetch(C2, 1, 0);
     STR_C4(2);
     STR_C4(3);
   }
